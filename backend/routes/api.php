@@ -1,8 +1,16 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CaseController;
+use App\Http\Controllers\PublicController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// Public Endpoints (Tanpa Auth)
+Route::match(['get', 'post'], '/eligibility-check', [PublicController::class, 'checkEligibility']);
+Route::get('/statistics', [PublicController::class, 'statistics']);
+Route::get('/courts', [PublicController::class, 'courts']);
+Route::get('/faqs', [PublicController::class, 'faqs']);
 
 // Public Auth Routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -12,4 +20,13 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Khusus Role Warga: Layanan Pengajuan Perkara Perceraian
+    Route::middleware('role:warga')->group(function () {
+        Route::get('/cases/cost-estimate', [CaseController::class, 'costEstimate']);
+        Route::get('/cases', [CaseController::class, 'index']);
+        Route::post('/cases', [CaseController::class, 'store']);
+        Route::get('/cases/{id}', [CaseController::class, 'show']);
+        Route::post('/cases/{id}/documents', [CaseController::class, 'uploadDocument']);
+    });
 });
