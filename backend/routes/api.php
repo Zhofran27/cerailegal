@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\CaseManagementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CaseController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,5 +30,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/cases', [CaseController::class, 'store']);
         Route::get('/cases/{id}', [CaseController::class, 'show']);
         Route::post('/cases/{id}/documents', [CaseController::class, 'uploadDocument']);
+        Route::get('/documents/{id}/download', [DocumentController::class, 'download']);
+    });
+
+    // Khusus Role Admin: Manajemen & Verifikasi Perkara Warga
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+        Route::get('/cases', [CaseManagementController::class, 'index']);
+        Route::get('/cases/{id}', [CaseManagementController::class, 'show']);
+        Route::put('/cases/{id}/status', [CaseManagementController::class, 'updateStatus']);
+        Route::get('/documents/{id}', [CaseManagementController::class, 'viewDocument']);
     });
 });

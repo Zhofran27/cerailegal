@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCaseRequest;
 use App\Http\Requests\UploadDocumentRequest;
+use App\Http\Resources\CaseResource;
+use App\Http\Resources\DocumentResource;
 use App\Models\Court;
 use App\Models\LegalCase;
 use Illuminate\Http\JsonResponse;
@@ -26,7 +28,7 @@ class CaseController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Daftar perkara berhasil dimuat.',
-            'data' => $cases,
+            'data' => CaseResource::collection($cases),
         ]);
     }
 
@@ -50,7 +52,7 @@ class CaseController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Detail perkara berhasil dimuat.',
-            'data' => $case,
+            'data' => new CaseResource($case),
         ]);
     }
 
@@ -99,7 +101,7 @@ class CaseController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Pengajuan perkara berhasil disimpan.',
-            'data' => $case,
+            'data' => new CaseResource($case),
         ], 201);
     }
 
@@ -138,7 +140,7 @@ class CaseController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Dokumen berhasil diunggah secara aman.',
-            'data' => $document,
+            'data' => new DocumentResource($document),
         ], 201);
     }
 
