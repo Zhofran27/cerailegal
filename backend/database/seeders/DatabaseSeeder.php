@@ -15,9 +15,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed role ('admin' dan 'warga') serta default Super Admin
+        // Seed role ('admin' dan 'warga'), default Super Admin, daftar Pengadilan, dan FAQ
         $this->call([
             RoleAndAdminSeeder::class,
+            CourtSeeder::class,
+            FaqSeeder::class,
         ]);
     }
 }
