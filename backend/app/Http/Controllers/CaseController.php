@@ -21,7 +21,7 @@ class CaseController extends Controller
     public function index(Request $request): JsonResponse
     {
         $cases = LegalCase::where('user_id', $request->user()->id)
-            ->with(['court', 'spouseDetail', 'marriageDetail', 'documents', 'statusLogs'])
+            ->with(['user', 'court', 'spouseDetail', 'marriageDetail', 'documents', 'statusLogs'])
             ->latest()
             ->get();
 
@@ -39,7 +39,7 @@ class CaseController extends Controller
     {
         $case = LegalCase::where('id', $id)
             ->where('user_id', $request->user()->id)
-            ->with(['court', 'spouseDetail', 'marriageDetail', 'documents', 'statusLogs'])
+            ->with(['user', 'court', 'spouseDetail', 'marriageDetail', 'documents', 'statusLogs'])
             ->first();
 
         if (! $case) {
@@ -66,7 +66,8 @@ class CaseController extends Controller
         $user = $request->user();
 
         $case = DB::transaction(function () use ($validated, $user) {
-            $status = $validated['status'] ?? 'submitted';
+            // Perkara baru selalu menjadi draf sampai semua unggahan selesai.
+            $status = 'draft';
 
             // Generate nomor referensi registrasi perkara
             $caseNumber = 'CL-' . date('Ymd') . '-' . strtoupper(Str::random(5));
@@ -78,6 +79,7 @@ class CaseController extends Controller
                 'case_number' => $caseNumber,
                 'reason' => $validated['reason'],
                 'status' => $status,
+                'applicant_detail' => $validated['applicant_detail'] ?? null,
             ]);
 
             // 2. Simpan ke tabel spouse_details (One-to-One)
@@ -105,6 +107,54 @@ class CaseController extends Controller
         ], 201);
     }
 
+    /** Submit an owned draft after its initial documents are uploaded. */
+    public function submit(Request $request, string $id): JsonResponse
+    {
+        $case = LegalCase::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->with('documents')
+            ->first();
+
+        if (! $case) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Perkara tidak ditemukan atau Anda tidak memiliki akses.',
+            ], 404);
+        }
+
+        if ($case->status !== 'draft') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pengajuan ini sudah dikirim dan tidak dapat diubah.',
+            ], 409);
+        }
+
+        $hasRequiredDocuments = $case->documents->pluck('type')->unique()->intersect(['ktp', 'buku_nikah'])->count() === 2;
+        if (! $hasRequiredDocuments) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unggah KTP dan Buku Nikah atau Akta Perkawinan sebelum mengirim pengajuan.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($case) {
+            $case->update(['status' => 'submitted']);
+            $case->statusLogs()->create([
+                'status' => 'submitted',
+                'notes' => 'Pengajuan permohonan/gugatan perceraian berhasil disubmit oleh pemohon.',
+                'changed_by_admin_id' => null,
+            ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pengajuan berhasil dikirim. Data dan dokumen kini terkunci.',
+            'data' => new CaseResource($case->fresh([
+                'user', 'court', 'spouseDetail', 'marriageDetail', 'documents', 'statusLogs',
+            ])),
+        ]);
+    }
+
     /**
      * Upload document (KTP, Buku Nikah, etc.) securely to private local disk.
      */
@@ -122,6 +172,13 @@ class CaseController extends Controller
                 'success' => false,
                 'message' => 'Perkara tidak ditemukan atau Anda tidak memiliki akses.',
             ], 404);
+        }
+
+        if ($case->status !== 'draft') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pengajuan sudah dikirim. Dokumen tidak dapat diubah lagi.',
+            ], 409);
         }
 
         $file = $request->file('file');

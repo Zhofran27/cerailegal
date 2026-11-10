@@ -5,9 +5,13 @@ export const useAuthStore = defineStore("auth", {
   state: () => ({
     token: localStorage.getItem("cerailegal_token"),
     user: null,
+    roles: [],
     loading: false,
   }),
-  getters: { authenticated: (state) => Boolean(state.token) },
+  getters: {
+    authenticated: (state) => Boolean(state.token),
+    isAdmin: (state) => state.roles.includes("admin"),
+  },
   actions: {
     async login(credentials) {
       this.loading = true;
@@ -16,6 +20,7 @@ export const useAuthStore = defineStore("auth", {
         this.token = data.access_token || data.token;
         localStorage.setItem("cerailegal_token", this.token);
         this.user = data.user || null;
+        this.roles = data.roles || [];
         if (!this.user) await this.fetchMe();
       } finally {
         this.loading = false;
@@ -29,6 +34,7 @@ export const useAuthStore = defineStore("auth", {
           this.token = result.access_token || result.token;
           localStorage.setItem("cerailegal_token", this.token);
           this.user = result.user || null;
+          this.roles = result.roles || [];
         }
       } finally {
         this.loading = false;
@@ -37,6 +43,7 @@ export const useAuthStore = defineStore("auth", {
     async fetchMe() {
       const profile = await api.me();
       this.user = profile.user || profile;
+      this.roles = profile.roles || this.user?.roles || [];
       return this.user;
     },
     async logout() {
@@ -45,6 +52,7 @@ export const useAuthStore = defineStore("auth", {
       } finally {
         this.token = null;
         this.user = null;
+        this.roles = [];
         localStorage.removeItem("cerailegal_token");
       }
     },

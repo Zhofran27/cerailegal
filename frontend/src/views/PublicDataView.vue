@@ -36,6 +36,7 @@ const selectedCourt = ref("");
 const radius = ref("1");
 const estimate = ref(null);
 const trackingId = ref("");
+const loginRequired = ref(false);
 let debounce;
 async function load() {
   if (!["faqs", "courts"].includes(props.page)) return;
@@ -84,12 +85,14 @@ async function calculate() {
 }
 async function track() {
   error.value = "";
+  loginRequired.value = false;
   if (!trackingId.value.trim()) {
     error.value = "Masukkan nomor perkara terlebih dahulu.";
     return;
   }
   if (!auth.authenticated) {
-    router.push({ path: "/login", query: { redirect: "/status" } });
+    loginRequired.value = true;
+    error.value = "Masuk ke akun terlebih dahulu untuk melanjutkan pencarian perkara.";
     return;
   }
   busy.value = true;
@@ -142,8 +145,11 @@ const rupiah = (v) =>
         <p class="services-intro" v-else-if="page === 'courts'">
           Cari berdasarkan nama pengadilan atau kota.
         </p>
-        <p class="services-intro" v-else-if="page === 'status'">
+        <p class="services-intro" v-else-if="page === 'status' && !auth.authenticated">
           Masuk ke akun untuk melihat informasi dan riwayat perkara secara aman.
+        </p>
+        <p class="services-intro" v-else-if="page === 'status'">
+          Masukkan nomor perkara untuk membuka informasi dan riwayatnya.
         </p>
         <p class="services-intro" v-else>
           Nilai ini adalah simulasi. Besaran resmi ditetapkan oleh pengadilan
@@ -153,7 +159,6 @@ const rupiah = (v) =>
       <div v-if="page === 'faqs' || page === 'courts'" class="data-panel">
         <div class="filter-row">
           <label class="search-field"
-            ><span>⌕</span
             ><input
               v-model="search"
               :placeholder="
@@ -210,7 +215,6 @@ const rupiah = (v) =>
             :key="court.id || index"
             class="court-item"
           >
-            <div class="court-icon">⌂</div>
             <div>
               <span>{{ court.type || "PENGADILAN" }}</span>
               <h3>{{ court.name }}</h3>
@@ -233,28 +237,32 @@ const rupiah = (v) =>
         </div>
       </div>
       <div v-else-if="page === 'status'" class="lookup-card">
-        <div class="lookup-icon">⌕</div>
         <h2>Masukkan nomor perkara</h2>
-        <p>
+        <p v-if="!auth.authenticated">
           Untuk melindungi privasimu, detail perkara hanya dapat dilihat setelah
           masuk ke akun.
         </p>
+        <p v-else>Masukkan nomor perkara yang terhubung dengan akunmu.</p>
         <form @submit.prevent="track">
           <label class="field-label"
             >Nomor perkara<input
               v-model="trackingId"
+              @input="loginRequired = false; error = ''"
               class="input-control"
               placeholder="Contoh: CL-2026-ABCDE"
           /></label>
           <div v-if="error" class="inline-error">{{ error }}</div>
+          <RouterLink
+            v-if="loginRequired"
+            :to="{ path: '/login', query: { redirect: '/status' } }"
+            class="text-link status-login-feedback"
+          >
+            Masuk ke akun
+          </RouterLink>
           <div class="form-actions">
-            <button class="btn btn-primary">Lanjutkan <span></span></button>
+            <button class="btn btn-primary" type="submit">Lanjutkan</button>
           </div>
         </form>
-        <div class="lookup-divider">atau</div>
-        <RouterLink to="/login" class="text-link"
-          >Masuk ke akun untuk melihat perkara
-        </RouterLink>
       </div>
       <div v-else class="estimate-card">
         <div class="estimate-fields">

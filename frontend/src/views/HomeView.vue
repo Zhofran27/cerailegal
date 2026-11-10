@@ -38,7 +38,7 @@ const fmt = (v) => new Intl.NumberFormat("id-ID").format(v || 0);
           >
         </div>
         <div class="trust-note">
-          <span class="trust-icon">✓</span> Aman & privat <i></i> Gratis untuk
+          Aman & privat <i></i> Gratis untuk
           memulai <i></i> Bahasa yang mudah dipahami
         </div>
       </div>
@@ -56,8 +56,7 @@ const fmt = (v) => new Intl.NumberFormat("id-ID").format(v || 0);
         <div class="art-leaf leaf-one"></div>
         <div class="art-leaf leaf-two"></div>
         <div class="art-card">
-          <span class="art-check">✓</span
-          ><span
+          <span
             ><b>Langkah demi langkah</b
             ><small>Informasi jelas, proses transparan</small></span
           >
@@ -84,8 +83,7 @@ const fmt = (v) => new Intl.NumberFormat("id-ID").format(v || 0);
       </div>
       <div class="service-grid">
         <RouterLink to="/eligibility" class="service-card featured"
-          ><span class="service-number">01 / PERSIAPAN</span
-          ><span class="service-icon">◎</span>
+          ><span class="service-number">01 / PERSIAPAN</span>
           <h3>Cek Persiapan</h3>
           <p>
             Kenali syarat dasar dan dokumen yang perlu disiapkan sebelum
@@ -94,15 +92,13 @@ const fmt = (v) => new Intl.NumberFormat("id-ID").format(v || 0);
           <span class="card-link">Mulai cek</span></RouterLink
         >
         <RouterLink to="/status" class="service-card"
-          ><span class="service-number">02 / PELACAKAN</span
-          ><span class="service-icon">⌕</span>
+          ><span class="service-number">02 / PELACAKAN</span>
           <h3>Cek status perkara</h3>
           <p>Lihat perkembangan perkara dan riwayat pembaruan statusnya.</p>
           <span class="card-link">Lacak perkara <b></b></span
         ></RouterLink>
         <RouterLink to="/cost-estimate" class="service-card"
-          ><span class="service-number">03 / PERENCANAAN</span
-          ><span class="service-icon">Rp</span>
+          ><span class="service-number">03 / PERENCANAAN</span>
           <h3>Simulasi biaya</h3>
           <p>
             Dapatkan gambaran taksiran panjar berdasarkan pengadilan dan radius.
@@ -110,8 +106,7 @@ const fmt = (v) => new Intl.NumberFormat("id-ID").format(v || 0);
           <span class="card-link">Hitung biaya <b></b></span
         ></RouterLink>
         <RouterLink to="/courts" class="service-card"
-          ><span class="service-number">04 / DIREKTORI</span
-          ><span class="service-icon">⌖</span>
+          ><span class="service-number">04 / DIREKTORI</span>
           <h3>Cari pengadilan</h3>
           <p>Temukan pengadilan yang sesuai dengan domisili dan kebutuhanmu.</p>
           <span class="card-link">Lihat direktori <b></b></span
@@ -134,23 +129,19 @@ const fmt = (v) => new Intl.NumberFormat("id-ID").format(v || 0);
       </div>
       <div class="stat-grid">
         <div class="stat-card">
-          <span class="stat-icon"></span
-          ><strong>{{ loading ? "—" : fmt(stats?.total_cases) }}</strong
+          <strong>{{ loading ? "—" : fmt(stats?.total_cases) }}</strong
           ><span>Perkara tercatat</span><small>Agregat perkara platform</small>
         </div>
         <div class="stat-card">
-          <span class="stat-icon">⌂</span
-          ><strong>{{ loading ? "—" : fmt(stats?.total_courts) }}</strong
+          <strong>{{ loading ? "—" : fmt(stats?.total_courts) }}</strong
           ><span>Pengadilan terdaftar</span><small>Direktori layanan</small>
         </div>
         <div class="stat-card">
-          <span class="stat-icon">✓</span
-          ><strong>{{ loading ? "—" : fmt(stats?.summary?.selesai) }}</strong
+          <strong>{{ loading ? "—" : fmt(stats?.summary?.selesai) }}</strong
           ><span>Perkara selesai</span><small>Termasuk putusan</small>
         </div>
         <div class="stat-card">
-          <span class="stat-icon">?</span
-          ><strong>{{ loading ? "—" : fmt(stats?.total_faqs) }}</strong
+          <strong>{{ loading ? "—" : fmt(stats?.total_faqs) }}</strong
           ><span>Informasi tersedia</span><small>FAQ dan glosarium</small>
         </div>
       </div>
@@ -159,7 +150,6 @@ const fmt = (v) => new Intl.NumberFormat("id-ID").format(v || 0);
   <section class="closing-cta">
     <div class="container cta-inner">
       <div>
-        <span class="eyebrow">LANGKAH PERTAMA, DENGAN TENANG</span>
         <h2>Setiap perjalanan dimulai dengan memahami pilihanmu.</h2>
       </div>
       <RouterLink to="/eligibility" class="btn btn-light btn-large"

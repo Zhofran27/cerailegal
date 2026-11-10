@@ -133,19 +133,11 @@ function reset() {
             </div>
           </div>
           <p class="privacy-hint">
-            <span>♧</span> Jawabanmu hanya digunakan untuk memberi panduan awal.
+            Jawabanmu hanya digunakan untuk memberi panduan awal.
           </p>
         </template>
         <template v-else
-          ><div
-            :class="[
-              'result-symbol',
-              result.is_eligible ? 'result-positive' : 'result-review',
-            ]"
-          >
-            {{ result.is_eligible ? "✓" : "i" }}
-          </div>
-          <div class="eyebrow">HASIL PANDUAN AWAL</div>
+          ><div class="eyebrow">HASIL PANDUAN AWAL</div>
           <h1>
             {{
               result.is_eligible

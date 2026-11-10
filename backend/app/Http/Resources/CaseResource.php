@@ -19,6 +19,7 @@ class CaseResource extends JsonResource
             'case_number' => $this->case_number,
             'reason' => $this->reason,
             'status' => $this->status,
+            'applicant_detail' => $this->applicant_detail,
             'user' => $this->whenLoaded('user', function () {
                 return [
                     'id' => $this->user->id,

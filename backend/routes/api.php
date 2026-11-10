@@ -13,6 +13,7 @@ Route::match(['get', 'post'], '/eligibility-check', [PublicController::class, 'c
 Route::get('/statistics', [PublicController::class, 'statistics']);
 Route::get('/courts', [PublicController::class, 'courts']);
 Route::get('/faqs', [PublicController::class, 'faqs']);
+Route::get('/cases/cost-estimate', [CaseController::class, 'costEstimate']);
 
 // Public Auth Routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -25,9 +26,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Khusus Role Warga: Layanan Pengajuan Perkara Perceraian
     Route::middleware('role:warga')->group(function () {
-        Route::get('/cases/cost-estimate', [CaseController::class, 'costEstimate']);
         Route::get('/cases', [CaseController::class, 'index']);
         Route::post('/cases', [CaseController::class, 'store']);
+        Route::post('/cases/{id}/submit', [CaseController::class, 'submit']);
         Route::get('/cases/{id}', [CaseController::class, 'show']);
         Route::post('/cases/{id}/documents', [CaseController::class, 'uploadDocument']);
         Route::get('/documents/{id}/download', [DocumentController::class, 'download']);

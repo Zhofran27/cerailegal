@@ -49,7 +49,9 @@ async function submit() {
       );
       return;
     }
-    router.push(String(route.query.redirect || "/dashboard"));
+    router.push(
+      String(route.query.redirect || (auth.isAdmin ? "/admin/cases" : "/dashboard")),
+    );
   } catch (e) {
     error.value = apiError(e);
   }
@@ -67,7 +69,6 @@ async function submit() {
         }}
       </h1>
       <p>Kelola pengajuan dan dokumenmu dalam satu tempat yang aman.</p>
-      <div class="auth-aside-mark">⚖</div>
       <div class="auth-aside-bottom">
         Informasi jelas. Langkah yang lebih tenang.
       </div>

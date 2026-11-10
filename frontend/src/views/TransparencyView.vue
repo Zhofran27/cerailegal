@@ -79,13 +79,13 @@ onMounted(async () => {
           <small>Data status perkara terkini</small>
         </article>
         <article class="transparency-metric">
-          <div class="metric-caption">Perkara Selesai <span>◷</span></div>
+          <div class="metric-caption">Perkara Selesai</div>
           <strong>{{ loading ? "—" : number(completed) }}</strong>
           <p>Perkara yang telah selesai</p>
           <small>Termasuk status putusan</small>
         </article>
         <article class="transparency-metric">
-          <div class="metric-caption">Akses Layanan <span>⌂</span></div>
+          <div class="metric-caption">Akses Layanan</div>
           <strong>{{ loading ? "—" : number(stats?.total_courts) }}</strong>
           <p>Pengadilan terdaftar</p>
           <small>{{
@@ -159,7 +159,7 @@ onMounted(async () => {
             </div>
           </div>
           <div class="panel-footnote">
-            <span>● Status dapat berubah setelah pembaruan perkara</span
+            <span>Status dapat berubah setelah pembaruan perkara</span
             ><b>Data diperbarui berkala</b>
           </div>
         </section>

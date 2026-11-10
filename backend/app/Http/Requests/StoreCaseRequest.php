@@ -25,7 +25,14 @@ class StoreCaseRequest extends FormRequest
             // Data Perkara
             'court_id' => ['required', 'integer', 'exists:courts,id'],
             'reason' => ['required', 'string'],
-            'status' => ['nullable', 'string', 'in:draft,submitted'],
+            'status' => ['nullable', 'string', 'in:draft'],
+
+            // Data pemohon disimpan bersama perkara agar tidak hilang setelah dikirim.
+            'applicant_detail' => ['nullable', 'array'],
+            'applicant_detail.full_name' => ['required_with:applicant_detail', 'string', 'max:255'],
+            'applicant_detail.nik' => ['required_with:applicant_detail', 'digits:16'],
+            'applicant_detail.birth_date' => ['required_with:applicant_detail', 'date'],
+            'applicant_detail.address' => ['required_with:applicant_detail', 'string', 'max:2000'],
 
             // Data Pasangan (spouse_detail)
             'spouse_detail' => ['required', 'array'],

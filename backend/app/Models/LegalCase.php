@@ -33,7 +33,13 @@ class LegalCase extends Model
         'case_number',
         'reason',
         'status',
+        'applicant_detail',
     ];
+
+    protected function casts(): array
+    {
+        return ['applicant_detail' => 'array'];
+    }
 
     /**
      * Get the user that owns the case.

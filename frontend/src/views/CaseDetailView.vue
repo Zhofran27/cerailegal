@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 import { api } from "../api";
 import { apiError } from "../api/http";
@@ -9,14 +9,61 @@ const busy = ref(true);
 const error = ref("");
 const uploading = ref(false);
 const labels = {
-  submitted: "Diajukan",
+  submitted: "Pengajuan diterima",
   draft: "Draf",
-  in_review: "Dalam pemeriksaan",
-  in_court: "Dalam persidangan",
-  completed: "Selesai",
-  approved: "Selesai",
-  rejected: "Perlu tindak lanjut",
+  in_review: "Verifikasi berkas",
+  registered: "Nomor perkara terbit",
+  summons: "Pemanggilan",
+  mediation: "Mediasi",
+  in_court: "Persidangan",
+  completed: "Putusan selesai",
+  approved: "Putusan selesai",
+  rejected: "Perlu perbaikan berkas",
+  diajukan: "Pengajuan diterima",
+  diproses: "Verifikasi berkas",
+  sedang_sidang: "Persidangan",
+  selesai: "Putusan selesai",
+  ditolak: "Perlu perbaikan berkas",
 };
+const progressStages = [
+  "Pengajuan diterima",
+  "Verifikasi berkas",
+  "Nomor perkara terbit",
+  "Pemanggilan",
+  "Mediasi",
+  "Persidangan",
+  "Putusan selesai",
+  "Perlu perbaikan berkas",
+];
+const latestLog = computed(() =>
+  [...(item.value?.status_logs || [])].sort(
+    (first, second) =>
+      new Date(second.changed_at).getTime() -
+      new Date(first.changed_at).getTime(),
+  )[0],
+);
+const activeStage = computed(() => progressStages[currentProgress.value - 1] || "Menunggu verifikasi");
+const currentProgress = computed(() => {
+  const status = String(item.value?.status || "").toLowerCase();
+  if (["rejected", "ditolak"].includes(status)) return 8;
+  if (["completed", "approved", "selesai"].includes(status)) return 7;
+  if (["in_court", "sedang_sidang"].includes(status)) return 6;
+  if (status === "mediation") return 5;
+  if (status === "summons") return 4;
+  if (status === "registered") return 3;
+  if (["in_review", "diproses"].includes(status)) return 2;
+  if (["submitted", "diajukan"].includes(status)) return 1;
+  return 0;
+});
+const documentsLocked = computed(() =>
+  String(item.value?.status || "").toLowerCase() !== "draft",
+);
+const canSubmitDraft = computed(() =>
+  ["ktp", "buku_nikah"].every((type) =>
+    item.value?.documents?.some((document) => document.type === type),
+  ),
+);
+const submittingDraft = ref(false);
 const docs = [
   { type: "ktp", label: "Kartu Tanda Penduduk" },
   { type: "buku_nikah", label: "Buku Nikah / Akta Perkawinan" },
@@ -37,6 +84,11 @@ async function load() {
 async function upload(type, event) {
   const file = event.target.files?.[0];
   if (!file) return;
+  if (documentsLocked.value) {
+    error.value = "Pengajuan sudah dikirim. Dokumen tidak dapat diubah lagi.";
+    event.target.value = "";
+    return;
+  }
   if (file.size > 5 * 1024 * 1024) {
     error.value = "Ukuran file maksimal 5 MB.";
     event.target.value = "";
@@ -77,6 +129,22 @@ async function download(doc) {
     error.value = apiError(e);
   }
 }
+async function submitDraft() {
+  submittingDraft.value = true;
+  error.value = "";
+  try {
+    item.value = await api.submitCase(item.value.id);
+    window.dispatchEvent(
+      new CustomEvent("cerailegal:toast", {
+        detail: "Pengajuan berhasil dikirim. Data dan dokumen kini terkunci.",
+      }),
+    );
+  } catch (e) {
+    error.value = apiError(e);
+  } finally {
+    submittingDraft.value = false;
+  }
+}
 onMounted(load);
 </script>
 <template>
@@ -110,32 +178,45 @@ onMounted(load);
         <div class="detail-grid">
           <section class="detail-panel">
             <div class="panel-heading">
-              <div class="eyebrow">RIWAYAT STATUS</div>
+              <div class="eyebrow">PROGRES PERKARA</div>
+              <span class="detail-progress-count">
+                {{ currentProgress }} dari {{ progressStages.length }} tahap
+              </span>
             </div>
-            <div class="audit-list">
-              <article
-                v-for="(log, index) in [...(item.status_logs || [])].reverse()"
-                :key="log.id"
-                class="audit-item"
+            <ol class="case-stage-list" :aria-label="`Progres sampai tahap ${activeStage}`">
+              <li
+                v-for="(stage, index) in progressStages"
+                :key="stage"
+                :class="{ reached: index < currentProgress - 1, current: index === currentProgress - 1 }"
               >
-                <div :class="['audit-dot', { current: index === 0 }]" />
-                <div>
-                  <b>{{ labels[log.status] || log.status }}</b>
-                  <p>{{ log.notes }}</p>
-                  <small>{{
-                    new Date(log.changed_at).toLocaleString("id-ID")
-                  }}</small>
-                </div>
-              </article>
-              <div v-if="!item.status_logs?.length" class="empty-state">
-                Belum ada pembaruan status.
-              </div>
+                <span class="case-stage-marker">{{ index + 1 }}</span>
+                <b>{{ stage }}</b>
+              </li>
+            </ol>
+            <div class="case-stage-current">
+              <b>{{ activeStage }}</b>
+              <span>{{ labels[item.status] || item.status }}</span>
             </div>
+            <p v-if="latestLog?.notes" class="case-stage-note">{{ latestLog.notes }}</p>
+            <time v-if="latestLog?.changed_at" class="case-stage-time" :datetime="latestLog.changed_at">
+              {{ new Date(latestLog.changed_at).toLocaleString("id-ID") }}
+            </time>
           </section>
           <section class="detail-panel">
             <div class="panel-heading">
               <div class="eyebrow">RINGKASAN PENGAJUAN</div>
             </div>
+            <h3>Data pemohon</h3>
+            <p class="detail-text">
+              {{ item.applicant_detail?.full_name || item.user?.name || "Belum dilengkapi" }}
+            </p>
+            <p v-if="item.applicant_detail?.nik" class="detail-muted">
+              NIK {{ item.applicant_detail.nik }}
+            </p>
+            <p v-if="item.applicant_detail?.address" class="detail-muted">
+              {{ item.applicant_detail.address }}
+            </p>
+            <hr />
             <h3>Alasan pengajuan</h3>
             <p class="detail-text">{{ item.reason }}</p>
             <hr />
@@ -170,13 +251,15 @@ onMounted(load);
             </div>
             <span class="optional">PDF, JPG, PNG · maks. 5 MB</span>
           </div>
+          <p v-if="documentsLocked" class="documents-lock-note">
+            Data dan berkas dikunci sejak pengajuan dikirim agar tidak berubah selama proses pemeriksaan. Hubungi admin jika ada perbaikan.
+          </p>
           <div class="document-list">
             <article
               v-for="docType in docs"
               :key="docType.type"
               class="document-row"
             >
-              <div class="doc-symbol">▤</div>
               <div>
                 <b>{{ docType.label }}</b>
                 <p
@@ -195,7 +278,7 @@ onMounted(load);
                   >Belum ada dokumen</small
                 >
               </div>
-              <label class="btn btn-outline upload-btn"
+              <label v-if="!documentsLocked" class="btn btn-outline upload-btn"
                 >{{ uploading ? "Mengunggah…" : "Unggah"
                 }}<input
                   type="file"
@@ -205,6 +288,18 @@ onMounted(load);
               /></label>
             </article>
           </div></section
+        ><section v-if="item.status === 'draft'" class="draft-submit-panel">
+          <p v-if="!canSubmitDraft" class="case-helper-text">
+            Unggah KTP dan Buku Nikah atau Akta Perkawinan sebelum mengirim pengajuan.
+          </p>
+          <button
+            class="btn btn-primary"
+            :disabled="!canSubmitDraft || uploading || submittingDraft"
+            @click="submitDraft"
+          >
+            {{ submittingDraft ? "Mengirim..." : "Kirim pengajuan" }}
+          </button>
+        </section
       ></template>
     </div>
   </section>

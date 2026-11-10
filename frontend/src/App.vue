@@ -7,6 +7,7 @@ const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 const menuOpen = ref(false);
+const profileOpen = ref(false);
 const toast = ref("");
 let toastTimer;
 const links = [
@@ -38,19 +39,23 @@ async function signOut() {
 
 <template>
   <div class="min-h-screen flex flex-col">
-    <header class="site-header">
+    <header :class="['site-header', { 'admin-site-header': auth.isAdmin }]">
       <div class="nav-wrap">
-        <RouterLink to="/" class="brand" aria-label="CeraiLegal beranda"
-          ><span class="brand-mark">⚖</span> CeraiLegal</RouterLink
+        <RouterLink :to="auth.isAdmin ? '/admin/cases' : '/'" class="brand" :aria-label="auth.isAdmin ? 'Panel admin CeraiLegal' : 'CeraiLegal beranda'"
+          ><span class="brand-mark" aria-hidden="true">⚖</span> CeraiLegal</RouterLink
         >
         <button
           class="mobile-toggle"
           aria-label="Buka navigasi"
           @click="menuOpen = !menuOpen"
         >
-          ☰
+          <span class="menu-toggle-lines" aria-hidden="true"></span>
         </button>
-        <nav :class="['main-nav', { 'nav-open': menuOpen }]">
+        <nav v-if="auth.isAdmin" :class="['main-nav', 'admin-main-nav', { 'nav-open': menuOpen }]">
+          <RouterLink to="/admin/cases" @click="menuOpen = false">Kelola perkara</RouterLink>
+          <RouterLink to="/" @click="menuOpen = false">Situs publik</RouterLink>
+        </nav>
+        <nav v-else :class="['main-nav', { 'nav-open': menuOpen }]">
           <RouterLink
             v-for="link in links"
             :key="link.label"
@@ -74,9 +79,29 @@ async function signOut() {
             >Daftar</RouterLink
           >
           <template v-else>
-            <button class="btn btn-outline nav-extra" @click="signOut">
-              Keluar
-            </button>
+            <div v-if="auth.isAdmin" class="admin-profile-wrap">
+              <button
+                class="admin-profile-trigger"
+                :aria-expanded="profileOpen"
+                aria-haspopup="menu"
+                @click="profileOpen = !profileOpen"
+              >
+                <span class="admin-profile-avatar" aria-hidden="true">{{ (auth.user?.name || "A").slice(0, 1).toUpperCase() }}</span>
+                <span class="admin-profile-name">{{ auth.user?.name || "Admin" }}</span>
+                <span class="admin-profile-caret" aria-hidden="true"></span>
+              </button>
+              <div v-if="profileOpen" class="admin-profile-menu" role="menu">
+                <span class="admin-profile-caption">Profil admin</span>
+                <strong>{{ auth.user?.name || "Administrator" }}</strong>
+                <small>{{ auth.user?.email || "Akun admin CeraiLegal" }}</small>
+                <span class="admin-role-badge">Administrator</span>
+                <button class="admin-profile-logout" role="menuitem" @click="profileOpen = false; signOut()">Keluar dari akun</button>
+              </div>
+            </div>
+            <template v-else>
+              <button class="btn btn-outline nav-extra" @click="signOut">
+                Keluar
+              </button>
             <RouterLink
               class="profile-link"
               to="/dashboard"
@@ -87,6 +112,7 @@ async function signOut() {
                 <path d="M5.5 20c.5-3.6 2.8-5.5 6.5-5.5s6 1.9 6.5 5.5" />
               </svg>
             </RouterLink>
+            </template>
           </template>
         </div>
       </div>
@@ -96,7 +122,7 @@ async function signOut() {
       <div class="footer-inner">
         <div>
           <RouterLink to="/" class="brand"
-            ><span class="brand-mark">⚖</span> CeraiLegal</RouterLink
+            ><span class="brand-mark" aria-hidden="true">⚖</span> CeraiLegal</RouterLink
           >
           <p>Pendamping perkara dalam bahasa sehari-hari.</p>
         </div>

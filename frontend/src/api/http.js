@@ -18,7 +18,8 @@ http.interceptors.response.use(
       localStorage.removeItem("cerailegal_token");
       if (
         window.location.pathname.startsWith("/dashboard") ||
-        window.location.pathname.startsWith("/cases")
+        window.location.pathname.startsWith("/cases") ||
+        window.location.pathname.startsWith("/admin")
       ) {
         window.location.assign("/login");
       }

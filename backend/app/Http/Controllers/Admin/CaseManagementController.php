@@ -57,11 +57,18 @@ class CaseManagementController extends Controller
 
         $perPage = (int) $request->input('per_page', 15);
         $cases = $query->paginate($perPage);
+        $pageData = CaseResource::collection($cases)->response()->getData(true);
+        $pageData['summary'] = [
+            'total' => LegalCase::count(),
+            'needs_review' => LegalCase::whereIn('status', ['submitted', 'diajukan', 'in_review', 'diproses'])->count(),
+            'in_progress' => LegalCase::whereIn('status', ['registered', 'summons', 'mediation', 'in_court', 'sedang_sidang'])->count(),
+            'completed' => LegalCase::whereIn('status', ['completed', 'approved', 'selesai'])->count(),
+        ];
 
         return response()->json([
             'success' => true,
             'message' => 'Daftar seluruh perkara warga berhasil dimuat.',
-            'data' => CaseResource::collection($cases)->response()->getData(true),
+            'data' => $pageData,
         ]);
     }
 
@@ -114,9 +121,11 @@ class CaseManagementController extends Controller
 
         // Menggunakan transaksi agar perubahan status dan pencatatan log bersifat atomik
         DB::transaction(function () use ($case, $validated, $admin) {
-            $case->update([
-                'status' => $validated['status'],
-            ]);
+            $updates = ['status' => $validated['status']];
+            if (! empty($validated['case_number'])) {
+                $updates['case_number'] = $validated['case_number'];
+            }
+            $case->update($updates);
 
             // Otomatis mencatat perubahan status ke tabel case_status_logs
             $case->statusLogs()->create([
