@@ -16,6 +16,13 @@ foreach ($dirs as $dir) {
     }
 }
 
+// Fix Symfony / Laravel pathInfo calculation on Vercel:
+// Because this file is located at /api/index.php, Symfony detects '/api' as the base URL
+// and strips '/api' from the pathInfo, causing all /api/* routes to return 404.
+// Setting SCRIPT_NAME and PHP_SELF to '/index.php' preserves the full /api/* path.
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+$_SERVER['PHP_SELF'] = '/index.php';
+
 // Forward all incoming requests to Laravel public entrypoint
 require __DIR__ . '/../public/index.php';
 
