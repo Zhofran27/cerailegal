@@ -1,0 +1,10 @@
+.git
+.github
+tests/
+phpunit.xml
+Dockerfile
+docker-entrypoint.sh
+.env
+.env.backup
+.env.local
+

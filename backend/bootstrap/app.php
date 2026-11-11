@@ -22,3 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
+
+// If running in Vercel serverless environment, redirect writable storage to /tmp
+if (isset($_ENV['VERCEL']) || env('VERCEL') || str_contains(dirname(__DIR__), '/var/task')) {
+    $app->useStoragePath('/tmp/storage');
+}
+
+return $app;
